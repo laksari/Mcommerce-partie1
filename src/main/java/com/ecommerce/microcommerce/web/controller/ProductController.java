@@ -142,5 +142,19 @@ public class ProductController {
     	return produitsFiltres;
     }
     
+    // Afficher la liste des produits triés par ordre alphabetique
+    @GetMapping(value="/ProduitsTrie")
+    public MappingJacksonValue trierProduitsParOrdreAlphabetique() {
+
+    	 List<Product> produits = productDao.findAllByOrderByNomAsc();
+    	 
+    	 SimpleBeanPropertyFilter monFiltre = SimpleBeanPropertyFilter.serializeAllExcept("");
+    	 FilterProvider listDeNosFiltres = new SimpleFilterProvider().addFilter("monFiltreDynamique", monFiltre);
+    	 
+    	  MappingJacksonValue produitsFiltres = new MappingJacksonValue(produits);
+    	  produitsFiltres.setFilters(listDeNosFiltres);
+    	 return produitsFiltres;
+    }
+    
 
 }

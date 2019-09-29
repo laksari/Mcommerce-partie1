@@ -22,6 +22,9 @@ public interface ProductDao extends JpaRepository<Product, Integer> {
     
     List<Product> findAll();
     
+    // recuperer la liste des produits triés par ordre alphabétique
+    public List<Product> findAllByOrderByNomAsc(); 
+    
     
     
 }
