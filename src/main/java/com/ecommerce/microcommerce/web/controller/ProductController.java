@@ -3,6 +3,7 @@ package com.ecommerce.microcommerce.web.controller;
 import com.ecommerce.microcommerce.dao.ProductDao;
 import com.ecommerce.microcommerce.model.MargeProduit;
 import com.ecommerce.microcommerce.model.Product;
+import com.ecommerce.microcommerce.web.exceptions.ProduitGratuitException;
 import com.ecommerce.microcommerce.web.exceptions.ProduitIntrouvableException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -55,22 +56,28 @@ public class ProductController {
     @ApiOperation(value = "RÃ©cupÃ¨re un produit grÃ¢ce Ã  son ID Ã  condition que celui-ci soit en stock!")
     @GetMapping(value = "/Produits/{id}")
 
-    public Product afficherUnProduit(@PathVariable int id) {
+    public MappingJacksonValue afficherUnProduit(@PathVariable int id) {
 
         Product produit = productDao.findById(id);
 
         if(produit==null) throw new ProduitIntrouvableException("Le produit avec l'id " + id + " est INTROUVABLE. Ã‰cran Bleu si je pouvais.");
+        
+        SimpleBeanPropertyFilter monFiltre = SimpleBeanPropertyFilter.serializeAllExcept("");
 
-        return produit;
+        FilterProvider listDeNosFiltres = new SimpleFilterProvider().addFilter("monFiltreDynamique", monFiltre);
+        MappingJacksonValue produitFiltres = new MappingJacksonValue(produit);
+        produitFiltres.setFilters(listDeNosFiltres);
+
+        
+        return produitFiltres;
     }
-
-
-
 
     //ajouter un produit
     @PostMapping(value = "/Produits")
-
     public ResponseEntity<Void> ajouterProduit(@Valid @RequestBody Product product) {
+    	
+    	// si le prix de vente du produit ajouté est de 0, on lance une exception
+        if(product.getPrix() == 0)  throw new ProduitGratuitException("Attention: Le prix du produit doit étre supérieur à 0 ");
 
         Product productAdded =  productDao.save(product);
 
@@ -103,7 +110,7 @@ public class ProductController {
     @GetMapping(value = "test/produits/{prix}")
     public List<Product>  testeDeRequetes(@PathVariable int prix) {
 
-        return productDao.chercherUnProduitCher(400);
+        return productDao.chercherUnProduitCher(prix);
     }
 
     // La liste des produits affichée avec la marge entre le prix d'achat et le prix de vente
@@ -151,8 +158,8 @@ public class ProductController {
     	 SimpleBeanPropertyFilter monFiltre = SimpleBeanPropertyFilter.serializeAllExcept("");
     	 FilterProvider listDeNosFiltres = new SimpleFilterProvider().addFilter("monFiltreDynamique", monFiltre);
     	 
-    	  MappingJacksonValue produitsFiltres = new MappingJacksonValue(produits);
-    	  produitsFiltres.setFilters(listDeNosFiltres);
+    	 MappingJacksonValue produitsFiltres = new MappingJacksonValue(produits);
+    	 produitsFiltres.setFilters(listDeNosFiltres);
     	 return produitsFiltres;
     }
     
